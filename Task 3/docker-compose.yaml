@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+    database:
+        build:
+            context   : ./
+            dockerfile: Dockerfile_DB
+        restart       : always
+        ports         : 5432:5432
+        network       : backnet
+
+    backend:
+        build:
+            context   : ./
+            dockerfile: Dockerfile_Backend
+        command       : python3 manage.py runserver 0.0.0.0:8000
+        restart       : always
+        volumes       : ./lib_catalog/:/app/
+        ports         : 8000:8000
+        environment   :
+            - POSTGRES_NAME=django
+            - POSTGRES_USER=django
+            - POSTGRES_PASSWORD=django
+            - DATABASE_HOST=database
+            - DATABASE_PORT=5432
+        depends_on    : database
+        network       : backnet
+
+
+    web:
+        build:
+            context   : ./
+            dockerfile: Dockerfile_web
+        restart       : always
+        volumes       : ./frontend/:/web/
+        ports         : 80:80
+        depends_on    : backend
+        network       : frontnet
+
+
+    networks:
+        backnet:
+          driver      : bridge
+        frontnet:
+          driver      : bridge
